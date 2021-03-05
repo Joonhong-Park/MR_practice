@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.deduptitle;
+package jh.hadoop.mapreduce.sample;
 
-import jh.hadoop.mapreduce.ChatLog;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -32,29 +32,23 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class DedupTitleMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
+public class JoinMapper1 extends Mapper<LongWritable, Text, Text, Text> {
 
     private String delimiter;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", ",");
-        context.getCounter("CUSTOM_COUNT", "call mapper setup").increment(1);
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
-        String[] columns = row.split(delimiter);
-        String bTitle = columns[ChatLog.b_title.ordinal()];
-        String bStartTime = columns[ChatLog.b_start_time.ordinal()];
-        context.write(new Text(bStartTime + "^" + bTitle), NullWritable.get());
-        context.getCounter("CUSTOM_COUNT", "call mapper map").increment(1);
+        context.write(new Text(row), new Text(""));
+
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        context.getCounter("CUSTOM_COUNT", "call mapper cleanup").increment(1);
     }
 }

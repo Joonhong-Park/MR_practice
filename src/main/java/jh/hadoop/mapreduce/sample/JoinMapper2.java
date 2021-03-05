@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.deduptitle;
+package jh.hadoop.mapreduce.sample;
 
-import jh.hadoop.mapreduce.ChatLog;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import jh.hadoop.mapreduce.ChatLog;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Wordcount Mapper
@@ -32,29 +35,42 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class DedupTitleMapper extends Mapper<LongWritable, Text, Text, NullWritable> {
+public class JoinMapper2 extends Mapper<LongWritable, Text, Text, Text> {
 
     private String delimiter;
+    HashMap<String, String> chat_data = new HashMap<>();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", ",");
-        context.getCounter("CUSTOM_COUNT", "call mapper setup").increment(1);
+        delimiter = configuration.get("delimiter", "\t");
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
         String[] columns = row.split(delimiter);
-        String bTitle = columns[ChatLog.b_title.ordinal()];
-        String bStartTime = columns[ChatLog.b_start_time.ordinal()];
-        context.write(new Text(bStartTime + "^" + bTitle), NullWritable.get());
-        context.getCounter("CUSTOM_COUNT", "call mapper map").increment(1);
+        String chat_id = columns[ChatLog.user_id.ordinal()];
+        String chat = columns[ChatLog.chat_text.ordinal()];
+
+        if(!chat_data.containsKey(chat_id)){
+            chat_data.put(chat_id, chat);
+        }else{
+            String prev_data = chat_data.get(chat_id);
+            chat_data.put(chat_id, prev_data + "|" + chat);
+        }
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        context.getCounter("CUSTOM_COUNT", "call mapper cleanup").increment(1);
+        Iterator<Map.Entry<String, String>> itr = chat_data.entrySet().iterator();
+
+        while (itr.hasNext()){
+            Map.Entry<String,String> entry = itr.next();
+            String user_id = entry.getKey();
+            String chat_all = entry.getValue();
+
+            context.write(new Text(user_id), new Text(chat_all));
+        }
     }
 }
