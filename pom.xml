@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.datadynamics.hadoop.mapreduce</groupId>
+    <artifactId>mapreduce-template</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>MapReduce Job Template</name>
+    <description>MapReduce Job Template</description>
+
+    <properties>
+        <!-- Project -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <output.encoding>UTF-8</output.encoding>
+        <javadoc.locale>ko_KR</javadoc.locale>
+
+        <!-- Dependencies -->
+        <slf4j.version>1.6.4</slf4j.version>
+        <log4j.version>1.2.16</log4j.version>
+        <commons.lang.version>2.6</commons.lang.version>
+        <commons.logging.version>1.1.1</commons.logging.version>
+        <commons.cli.version>1.4</commons.cli.version>
+        <commons.cli2.version>2.0-mahout</commons.cli2.version>
+        <guava.version>27.0.1-jre</guava.version>
+        <spring.version>5.3.2</spring.version>
+        <postgres.version>42.2.18.jre7</postgres.version>
+        <mysql.version>5.1.49</mysql.version>
+
+
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>7</source>
+                    <target>7</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.yourcompany.hadoop.mapreduce.MapReduceDriver</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            -->
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>scp</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <scp todir="root:dd98969321@172.30.1.234:~/jar" trust="true" failonerror="false">
+                                    <fileset dir="${basedir}/target">
+                                        <include name="${project.build.finalName}*.jar"/>
+                                    </fileset>
+                                </scp>
+                                <sshexec host="172.30.1.234" username="root" trust="true" failonerror="false" password="dd98969321"
+                                         command="mv ~/jar/mapreduce-template-1.0.0-SNAPSHOT.jar ~/jar/mr.jar">
+                                </sshexec>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-jsch</artifactId>
+                        <version>1.6.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.jcraft</groupId>
+                        <artifactId>jsch</artifactId>
+                        <version>0.1.42</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <!-- TODO : MapReduce JAR 파일에 같이 포함시켜야 하는 경우 아래 항목을 변경합니다 -->
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.google.guava</groupId>
+                                    <artifactId>guava</artifactId>
+                                    <version>${guava.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>commons-cli</groupId>
+                                    <artifactId>commons-cli</artifactId>
+                                    <version>${commons.cli.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>commons-lang</groupId>
+                                    <artifactId>commons-lang</artifactId>
+                                    <version>${commons.lang.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-jdbc</artifactId>
+                                    <version>${spring.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-core</artifactId>
+                                    <version>${spring.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-beans</artifactId>
+                                    <version>${spring.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-tx</artifactId>
+                                    <version>${spring.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-tx</artifactId>
+                                    <version>${spring.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.postgresql</groupId>
+                                    <artifactId>postgresql</artifactId>
+                                    <version>${postgres.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>mysql</groupId>
+                                    <artifactId>mysql-connector-java</artifactId>
+                                    <version>${mysql.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <!-- ======== -->
+        <!--  Hadoop  -->
+        <!-- ======== -->
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.1.1.7.1.4.0-203</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>3.1.1.7.1.4.0-203</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
+            <version>3.1.1.7.1.4.0-203</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.mahout.commons</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>${commons.cli2.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+
+        <!-- =================== -->
+        <!--  Spring Framework   -->
+        <!-- =================== -->
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgres.version}</version>
+        </dependency>
+
+        <!-- ============= -->
+        <!--  Logging API  -->
+        <!-- ============= -->
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons.logging.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>cloudera-public</id>
+            <url>https://repository.cloudera.com/artifactory/public/</url>
+        </repository>
+    </repositories>
+
+    <developers>
+        <developer>
+            <id>fharenheit</id>
+            <name>Edward KIM</name>
+            <email>fharenheit@gmail.com</email>
+        </developer>
+    </developers>
+</project>
