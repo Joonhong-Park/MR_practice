@@ -31,25 +31,40 @@ import java.util.Iterator;
  * @version 0.1
  */
 public class JoinReducer extends Reducer<Text, Text, Text, Text> {
-    private StringBuilder chat_list;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        chat_list = new StringBuilder();
     }
 
     @Override
     protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         // key: ranker_id, value: ""
         // key: user_id, value: chat_text[]
-        for (Text one : values) {
-            String chat_data = one.toString();
-            chat_list = chat_list.append(chat_data);
+        Iterator<Text> iterator = values.iterator();
+        if (iterator.hasNext()) {
+            String first = iterator.next().toString();
+            String check = first.substring(0, 2);
+            if (check.equals("R^")) {
+                if(iterator.hasNext()){
+                    String second = iterator.next().toString();
+                    String check2 = second.substring(0,2);
+                    if(check2.equals("C^")){
+                        context.write(key, new Text(second.substring(2)));
+                    }
+                }
+            }else if(check.equals("C^")){
+                if(iterator.hasNext()){
+                    String third = iterator.next().toString();
+                    String check3 = third.substring(0,2);
+                    if(check3.equals("R^")){
+                        context.write(key, new Text(first.substring(2)));
+                    }
+                }
+            }
         }
-        context.write(key, new Text(chat_list.toString()));
     }
-
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
+
     }
 }

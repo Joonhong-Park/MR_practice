@@ -44,7 +44,7 @@ public class JoinMapper1 extends Mapper<LongWritable, Text, Text, Text> {
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
-        context.write(new Text(row), new Text(""));
+        context.write(new Text(row), new Text("R^"));
 
     }
 

@@ -54,10 +54,10 @@ public class JoinMapper2 extends Mapper<LongWritable, Text, Text, Text> {
         String chat = columns[ChatLog.chat_text.ordinal()];
 
         if(!chat_data.containsKey(chat_id)){
-            chat_data.put(chat_id, chat);
+            chat_data.put(chat_id, "C^"+chat);
         }else{
             String prev_data = chat_data.get(chat_id);
-            chat_data.put(chat_id, prev_data + "|" + chat);
+            chat_data.put(chat_id, prev_data + "| " + chat);
         }
     }
 
