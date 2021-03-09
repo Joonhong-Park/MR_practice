@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.Join;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.Iterator;
-
+import java.util.ArrayList;
 
 /**
  * Wordcount Reducer
@@ -30,25 +29,46 @@ import java.util.Iterator;
  * @author Data Dynamics
  * @version 0.1
  */
-public class ArrayAggByMapReducer extends Reducer<Text, Text, Text, Text> {
+public class JoinByKeyReducer extends Reducer<Text, Text, Text, Text> {
+    private String pre_flag;
+    private StringBuilder chat_all;
+    private String pre_id;
+
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-
+        pre_flag = "";
+        pre_id = "";
     }
 
     @Override
     protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-        Iterator<Text> iterator = values.iterator();
-        String output = "[";
-        while (iterator.hasNext()) {
-            Text one = iterator.next();
-            output += one.toString() + ",";
+
+
+        chat_all = new StringBuilder();
+        String[] flag = key.toString().split("\\^");
+        String id = flag[0];
+        String type = flag[1];
+
+        if (type.equals("A")) {
+            pre_flag = "A";
+            pre_id = id;
+        } else {
+            if (pre_flag.equals("A") && pre_id.equals(id)) {
+                for (Text value : values) {
+                    String chat_data = value.toString();
+                    chat_all.append(chat_data).append("|");
+                }
+                context.write(new Text(id), new Text(chat_all.toString().substring(0,chat_all.length()-1)));
+                pre_flag = "";
+                pre_id = "";
+            }
         }
-        output += "]";
-        context.write(key, new Text(output));
+
+
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
+
     }
 }

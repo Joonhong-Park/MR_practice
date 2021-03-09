@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.ArrayAgg;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import jh.hadoop.mapreduce.ChatLog;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Wordcount Mapper
@@ -35,42 +32,38 @@ import java.util.Map;
  * @author Data Dynamics
  * @version 0.1
  */
-public class JoinMapper2 extends Mapper<LongWritable, Text, Text, Text> {
+public class ArrayAggByMapMapper extends Mapper<LongWritable, Text, Text, Text> {
 
     private String delimiter;
-    HashMap<String, String> chat_data = new HashMap<>();
+    private String btime;
+    private HashMap<String, ArrayList<String>> map = new HashMap<>();// b_Start_time, b_title
+
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", "\t");
+        delimiter = configuration.get("delimiter", ",");
+        btime = configuration.get("btime");
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
         String[] columns = row.split(delimiter);
-        String chat_id = columns[ChatLog.user_id.ordinal()];
-        String chat = columns[ChatLog.chat_text.ordinal()];
-
-        if(!chat_data.containsKey(chat_id)){
-            chat_data.put(chat_id, "C^"+chat);
+        if (map.containsKey(columns[3])){
+            if(!map.get(columns[3]).contains(columns[2])){
+                map.get(columns[3]).add(columns[2]);
+                context.write(new Text(columns[3]), new Text(columns[2]));
+            }
         }else{
-            String prev_data = chat_data.get(chat_id);
-            chat_data.put(chat_id, prev_data + "| " + chat);
+            map.put(columns[3], new ArrayList<String>());
+            map.get(columns[3]).add(columns[2]);
+            context.write(new Text(columns[3]), new Text(columns[2]));
         }
+
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        Iterator<Map.Entry<String, String>> itr = chat_data.entrySet().iterator();
-
-        while (itr.hasNext()){
-            Map.Entry<String,String> entry = itr.next();
-            String user_id = entry.getKey();
-            String chat_all = entry.getValue();
-
-            context.write(new Text(user_id), new Text(chat_all));
-        }
     }
 }

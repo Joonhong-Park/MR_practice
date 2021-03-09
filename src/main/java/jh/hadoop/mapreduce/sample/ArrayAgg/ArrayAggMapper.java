@@ -15,37 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.ArrayAgg;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
-
 
 /**
- * Wordcount Reducer
+ * Wordcount Mapper
  *
  * @author Data Dynamics
  * @version 0.1
  */
-public class ArrayAggReducer extends Reducer<Text, Text, Text, Text> {
+public class ArrayAggMapper extends Mapper<LongWritable, Text, Text, Text> {
+
+    private String delimiter;
+    private String btime;
+    private int index;
+
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-
+        Configuration configuration = context.getConfiguration();
+        delimiter = configuration.get("delimiter", ",");
+        btime = configuration.get("btime");
     }
 
     @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-        Iterator<Text> iterator = values.iterator();
-        HashSet<String> set = new HashSet<>();
-        while (iterator.hasNext()) {
-            Text one = iterator.next();
-            set.add(one.toString());
+    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+        String row = value.toString();
+        String[] columns = row.split(delimiter);
+        if (btime.isEmpty()){
+            context.write(new Text(columns[3]), new Text((columns[2])));
+        }else{
+            if(columns[3].equals(btime)){
+                context.write(new Text(columns[3]), new Text((columns[2])));
+            }
         }
-        context.write(key, new Text(set.toString()));
+
+
     }
 
     @Override

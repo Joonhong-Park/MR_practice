@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.WordCount;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -30,41 +30,25 @@ import java.util.Iterator;
  * @author Data Dynamics
  * @version 0.1
  */
-public class JoinReducer extends Reducer<Text, Text, Text, Text> {
+public class WordCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+
     }
 
     @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-        // key: ranker_id, value: ""
-        // key: user_id, value: chat_text[]
-        Iterator<Text> iterator = values.iterator();
-        if (iterator.hasNext()) {
-            String first = iterator.next().toString();
-            String check = first.substring(0, 2);
-            if (check.equals("R^")) {
-                if(iterator.hasNext()){
-                    String second = iterator.next().toString();
-                    String check2 = second.substring(0,2);
-                    if(check2.equals("C^")){
-                        context.write(key, new Text(second.substring(2)));
-                    }
-                }
-            }else if(check.equals("C^")){
-                if(iterator.hasNext()){
-                    String third = iterator.next().toString();
-                    String check3 = third.substring(0,2);
-                    if(check3.equals("R^")){
-                        context.write(key, new Text(first.substring(2)));
-                    }
-                }
-            }
+    protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        Iterator<IntWritable> iterator = values.iterator();
+        int sum = 0;
+        while (iterator.hasNext()) {
+            IntWritable one = iterator.next();
+            sum += one.get();
         }
+        context.write(key, new IntWritable(sum));
     }
+
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-
     }
 }

@@ -15,37 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.count;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
- * Wordcount Reducer
+ * Wordcount Mapper
  *
  * @author Data Dynamics
  * @version 0.1
  */
-public class WhereCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class WhereCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
+    private String delimiter;
+    private String where;
+    private String what;
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-
+        Configuration configuration = context.getConfiguration();
+        delimiter = configuration.get("delimiter", ",");
+        where = configuration.get("where", "0");
+        what = configuration.get("what");
     }
 
     @Override
-    protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-        Iterator<IntWritable> iterator = values.iterator();
-        int sum = 0;
-        while (iterator.hasNext()) {
-            IntWritable one = iterator.next();
-            sum += one.get();
-        }
-        context.write(key, new IntWritable(sum));
+    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+        String row = value.toString();
+        String[] columns = row.split(delimiter);
+        int index = Integer.parseInt(where);
+        context.write(new Text(what), new IntWritable(1));
     }
 
     @Override

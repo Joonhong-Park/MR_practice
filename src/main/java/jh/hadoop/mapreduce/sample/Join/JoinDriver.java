@@ -15,12 +15,13 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.Join;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.ToolRunner;
@@ -33,10 +34,10 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class ArrayAggByMapDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class JoinDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new ArrayAggByMapDriver(), args);
+        int res = ToolRunner.run(new JoinDriver(), args);
         System.exit(res);
     }
 
@@ -44,13 +45,14 @@ public class ArrayAggByMapDriver extends org.apache.hadoop.conf.Configured imple
         GenericOptionsParser parser = new GenericOptionsParser(this.getConf(), args);
         String[] remainingArgs = parser.getRemainingArgs();
         Job job = Job.getInstance(this.getConf());
+
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(ArrayAggByMapDriver.class);
+        job.setJarByClass(JoinDriver.class);
 
         // Mapper & Reducer Class
-        job.setMapperClass(ArrayAggByMapMapper.class);
-        job.setReducerClass(ArrayAggByMapReducer.class);
+
+        job.setReducerClass(JoinReducer.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
         job.setMapOutputKeyClass(Text.class);
@@ -66,14 +68,14 @@ public class ArrayAggByMapDriver extends org.apache.hadoop.conf.Configured imple
 
     private void parseArguments(String[] args, Job job) throws IOException {
         for (int i = 0; i < args.length; ++i) {
-            if ("-input".equals(args[i])) {
-                FileInputFormat.addInputPaths(job, args[++i]);
+            if ("-inputone".equals(args[i])) {
+                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinMapper1.class);
+            } else if ("-inputtwo".equals(args[i])) {
+                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinMapper2.class);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
             } else if ("-delimiter".equals(args[i])) {
                 job.getConfiguration().set("delimiter", args[++i]);
-            } else if ("-btime".equals(args[i])) {
-                job.getConfiguration().set("btime", args[++i]);
             } else if ("-reducer".equals(args[i])) {
                 job.setNumReduceTasks(Integer.parseInt(args[++i]));
             }

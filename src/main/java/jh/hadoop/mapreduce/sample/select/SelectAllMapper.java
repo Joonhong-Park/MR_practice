@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.select;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -31,25 +31,21 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class WhereCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class SelectAllMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
 
     private String delimiter;
-    private String where;
-    private String what;
+
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", ",");
-        where = configuration.get("where", "0");
-        what = configuration.get("what");
+        delimiter = configuration.get("delimiter", "\t");
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String row = value.toString();
-        String[] columns = row.split(delimiter);
-        int index = Integer.parseInt(where);
-        context.write(new Text(what), new IntWritable(1));
+         String row = value.toString();
+        // String[] columns = row.split(delimiter);
+        context.write(NullWritable.get(),new Text(row));
     }
 
     @Override

@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.Join;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -31,23 +32,20 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class WordCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class JoinMapper1 extends Mapper<LongWritable, Text, Text, Text> {
 
     private String delimiter;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", ",");
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
-        String[] columns = row.split(delimiter);
-        for (String word : columns) {
-            context.write(new Text(word), new IntWritable(1));
-        }
+        context.write(new Text(row), new Text("R^"));
+
     }
 
     @Override

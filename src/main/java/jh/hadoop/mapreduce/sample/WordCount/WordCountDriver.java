@@ -15,10 +15,10 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.WordCount;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -34,13 +34,12 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class SelectAllDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class WordCountDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new SelectAllDriver(), args);
+        int res = ToolRunner.run(new WordCountDriver(), args);
         System.exit(res);
     }
-
 
     public int run(String[] args) throws Exception {
         GenericOptionsParser parser = new GenericOptionsParser(this.getConf(), args);
@@ -48,14 +47,19 @@ public class SelectAllDriver extends org.apache.hadoop.conf.Configured implement
         Job job = Job.getInstance(this.getConf());
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(SelectAllDriver.class);
+        job.setJarByClass(WordCountDriver.class);
 
         // Mapper & Reducer Class
-        job.setMapperClass(SelectAllMapper.class);
+        job.setMapperClass(WordCountMapper.class);
+        job.setReducerClass(WordCountReducer.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
-        job.setMapOutputKeyClass(NullWritable.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
+
+        // Reducer Output Key & Value Type
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
@@ -67,6 +71,10 @@ public class SelectAllDriver extends org.apache.hadoop.conf.Configured implement
                 FileInputFormat.addInputPaths(job, args[++i]);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
+            } else if ("-delimiter".equals(args[i])) {
+                job.getConfiguration().set("delimiter", args[++i]);
+            } else if ("-reducer".equals(args[i])) {
+                job.setNumReduceTasks(Integer.parseInt(args[++i]));
             }
         }
     }

@@ -15,13 +15,12 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.Join;
 
+import jh.hadoop.mapreduce.deduptitle.DedupTitlePartitioner;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -36,10 +35,10 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class JoinDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class JoinByKeyDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new JoinDriver(), args);
+        int res = ToolRunner.run(new JoinByKeyDriver(), args);
         System.exit(res);
     }
 
@@ -50,11 +49,11 @@ public class JoinDriver extends org.apache.hadoop.conf.Configured implements org
 
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(JoinDriver.class);
+        job.setJarByClass(JoinByKeyDriver.class);
 
         // Mapper & Reducer Class
 
-        job.setReducerClass(JoinReducer.class);
+        job.setReducerClass(JoinByKeyReducer.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
         job.setMapOutputKeyClass(Text.class);
@@ -64,6 +63,9 @@ public class JoinDriver extends org.apache.hadoop.conf.Configured implements org
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
+        // Partitioner
+        job.setPartitionerClass(JoinByKeyPartitioner.class);
+
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
     }
@@ -71,9 +73,9 @@ public class JoinDriver extends org.apache.hadoop.conf.Configured implements org
     private void parseArguments(String[] args, Job job) throws IOException {
         for (int i = 0; i < args.length; ++i) {
             if ("-inputone".equals(args[i])) {
-                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinMapper1.class);
+                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinByKeyMapper1.class);
             } else if ("-inputtwo".equals(args[i])) {
-                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinMapper2.class);
+                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinByKeyMapper2.class);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
             } else if ("-delimiter".equals(args[i])) {

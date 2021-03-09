@@ -15,9 +15,10 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.select;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -33,12 +34,13 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class ArrayAggDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class SelectWhereDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new ArrayAggDriver(), args);
+        int res = ToolRunner.run(new SelectWhereDriver(), args);
         System.exit(res);
     }
+
 
     public int run(String[] args) throws Exception {
         GenericOptionsParser parser = new GenericOptionsParser(this.getConf(), args);
@@ -46,19 +48,17 @@ public class ArrayAggDriver extends org.apache.hadoop.conf.Configured implements
         Job job = Job.getInstance(this.getConf());
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(ArrayAggDriver.class);
+        job.setJarByClass(SelectWhereDriver.class);
 
         // Mapper & Reducer Class
-        job.setMapperClass(ArrayAggMapper.class);
-        job.setReducerClass(ArrayAggReducer.class);
+        job.setMapperClass(SelectWhereMapper.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
-        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputKeyClass(NullWritable.class);
         job.setMapOutputValueClass(Text.class);
 
-        // Reducer Output Key & Value Type
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        // set reduce task 0
+        job.setNumReduceTasks(0);
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
@@ -70,12 +70,12 @@ public class ArrayAggDriver extends org.apache.hadoop.conf.Configured implements
                 FileInputFormat.addInputPaths(job, args[++i]);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
+            } else if ("-where".equals(args[i])) {
+                job.getConfiguration().set("where", args[++i]);
             } else if ("-delimiter".equals(args[i])) {
                 job.getConfiguration().set("delimiter", args[++i]);
-            } else if ("-btime".equals(args[i])) {
-                job.getConfiguration().set("btime", args[++i]);
-            } else if ("-reducer".equals(args[i])) {
-                job.setNumReduceTasks(Integer.parseInt(args[++i]));
+            } else if("-what".equals(args[i])){
+                job.getConfiguration().set("what", args[++i]);
             }
         }
     }

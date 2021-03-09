@@ -15,10 +15,9 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.ArrayAgg;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -34,10 +33,10 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class WordCountDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class ArrayAggDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new WordCountDriver(), args);
+        int res = ToolRunner.run(new ArrayAggDriver(), args);
         System.exit(res);
     }
 
@@ -47,19 +46,19 @@ public class WordCountDriver extends org.apache.hadoop.conf.Configured implement
         Job job = Job.getInstance(this.getConf());
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(WordCountDriver.class);
+        job.setJarByClass(ArrayAggDriver.class);
 
         // Mapper & Reducer Class
-        job.setMapperClass(WordCountMapper.class);
-        job.setReducerClass(WordCountReducer.class);
+        job.setMapperClass(ArrayAggMapper.class);
+        job.setReducerClass(ArrayAggReducer.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputValueClass(Text.class);
 
         // Reducer Output Key & Value Type
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
@@ -73,6 +72,8 @@ public class WordCountDriver extends org.apache.hadoop.conf.Configured implement
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
             } else if ("-delimiter".equals(args[i])) {
                 job.getConfiguration().set("delimiter", args[++i]);
+            } else if ("-btime".equals(args[i])) {
+                job.getConfiguration().set("btime", args[++i]);
             } else if ("-reducer".equals(args[i])) {
                 job.setNumReduceTasks(Integer.parseInt(args[++i]));
             }

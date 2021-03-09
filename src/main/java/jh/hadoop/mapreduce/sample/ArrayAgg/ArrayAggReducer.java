@@ -15,37 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.ArrayAgg;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
+
 
 /**
- * Wordcount Mapper
+ * Wordcount Reducer
  *
  * @author Data Dynamics
  * @version 0.1
  */
-public class JoinMapper1 extends Mapper<LongWritable, Text, Text, Text> {
-
-    private String delimiter;
-
+public class ArrayAggReducer extends Reducer<Text, Text, Text, Text> {
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        Configuration configuration = context.getConfiguration();
+
     }
 
     @Override
-    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String row = value.toString();
-        context.write(new Text(row), new Text("R^"));
-
+    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        Iterator<Text> iterator = values.iterator();
+        HashSet<String> set = new HashSet<>();
+        while (iterator.hasNext()) {
+            Text one = iterator.next();
+            set.add(one.toString());
+        }
+        context.write(key, new Text(set.toString()));
     }
 
     @Override

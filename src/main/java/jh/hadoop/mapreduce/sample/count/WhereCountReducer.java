@@ -15,47 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.count;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
- * Wordcount Mapper
+ * Wordcount Reducer
  *
  * @author Data Dynamics
  * @version 0.1
  */
-public class ArrayAggMapper extends Mapper<LongWritable, Text, Text, Text> {
-
-    private String delimiter;
-    private String btime;
-    private int index;
+public class WhereCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", ",");
-        btime = configuration.get("btime");
+
     }
 
     @Override
-    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String row = value.toString();
-        String[] columns = row.split(delimiter);
-        if (btime.isEmpty()){
-            context.write(new Text(columns[3]), new Text((columns[2])));
-        }else{
-            if(columns[3].equals(btime)){
-                context.write(new Text(columns[3]), new Text((columns[2])));
-            }
+    protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        Iterator<IntWritable> iterator = values.iterator();
+        int sum = 0;
+        while (iterator.hasNext()) {
+            IntWritable one = iterator.next();
+            sum += one.get();
         }
-
-
+        context.write(key, new IntWritable(sum));
     }
 
     @Override

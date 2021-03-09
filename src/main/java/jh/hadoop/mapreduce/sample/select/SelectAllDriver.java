@@ -15,7 +15,7 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jh.hadoop.mapreduce.sample;
+package jh.hadoop.mapreduce.sample.select;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -34,10 +34,10 @@ import java.io.IOException;
  * @author Data Dynamics
  * @version 0.1
  */
-public class SelectWhereDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
+public class SelectAllDriver extends org.apache.hadoop.conf.Configured implements org.apache.hadoop.util.Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new SelectWhereDriver(), args);
+        int res = ToolRunner.run(new SelectAllDriver(), args);
         System.exit(res);
     }
 
@@ -48,17 +48,14 @@ public class SelectWhereDriver extends org.apache.hadoop.conf.Configured impleme
         Job job = Job.getInstance(this.getConf());
         parseArguments(remainingArgs, job);
 
-        job.setJarByClass(SelectWhereDriver.class);
+        job.setJarByClass(SelectAllDriver.class);
 
         // Mapper & Reducer Class
-        job.setMapperClass(SelectWhereMapper.class);
+        job.setMapperClass(SelectAllMapper.class);
 
         // Mapper Output Key & Value Type after Hadoop 0.20
         job.setMapOutputKeyClass(NullWritable.class);
         job.setMapOutputValueClass(Text.class);
-
-        // set reduce task 0
-        job.setNumReduceTasks(0);
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
@@ -70,12 +67,6 @@ public class SelectWhereDriver extends org.apache.hadoop.conf.Configured impleme
                 FileInputFormat.addInputPaths(job, args[++i]);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
-            } else if ("-where".equals(args[i])) {
-                job.getConfiguration().set("where", args[++i]);
-            } else if ("-delimiter".equals(args[i])) {
-                job.getConfiguration().set("delimiter", args[++i]);
-            } else if("-what".equals(args[i])){
-                job.getConfiguration().set("what", args[++i]);
             }
         }
     }
