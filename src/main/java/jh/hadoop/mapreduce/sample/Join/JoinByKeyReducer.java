@@ -19,9 +19,11 @@ package jh.hadoop.mapreduce.sample.Join;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Wordcount Reducer
@@ -30,45 +32,57 @@ import java.util.ArrayList;
  * @version 0.1
  */
 public class JoinByKeyReducer extends Reducer<Text, Text, Text, Text> {
+    private static final Logger logger = LoggerFactory.getLogger(JoinByKeyReducer.class);
+
     private String pre_flag;
     private StringBuilder chat_all;
     private String pre_id;
+    private MultipleOutputs<Text, Text> outputs;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         pre_flag = "";
         pre_id = "";
-    }
-
-    @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
-
         chat_all = new StringBuilder();
-        String[] flag = key.toString().split("\\^");
-        String id = flag[0];
-        String type = flag[1];
-
-        if (type.equals("A")) {
-            pre_flag = "A";
-            pre_id = id;
-        } else {
-            if (pre_flag.equals("A") && pre_id.equals(id)) {
-                for (Text value : values) {
-                    String chat_data = value.toString();
-                    chat_all.append(chat_data).append("|");
-                }
-                context.write(new Text(id), new Text(chat_all.toString().substring(0,chat_all.length()-1)));
-                pre_flag = "";
-                pre_id = "";
-            }
-        }
-
-
+        outputs = new MultipleOutputs<>(context);
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
+        outputs.close();
+    }
 
+    @Override
+    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        chat_all.setLength(0);
+        String[] flag = key.toString().split("\\^");
+        String id = flag[0];
+        String type = flag[1];
+
+        switch (type) {
+            case "A":
+                pre_flag = "A";
+                pre_id = id;
+                break;
+            default:
+                if (pre_flag.equals("A") && pre_id.equals(id)) {
+                    for (Text value : values) {
+                        String chat_data = value.toString();
+                        chat_all.append(chat_data).append("|");
+                    }
+                    Text userId = new Text(id);
+                    String chats = chat_all.substring(0, chat_all.length() - 1);
+                    if (chats.isEmpty()) {
+                        logger.info("chats = {}", chats);
+                    }
+                    Text value = new Text(chats);
+                    //context.write(userId, value);
+                    context.getCounter("CUSTOM", "reduce mo write").increment(1);
+                    outputs.write("userId", userId, value, key.toString().replaceAll("\\^", "_"));
+                    pre_flag = "";
+                    pre_id = "";
+                }
+                break;
+        }
     }
 }

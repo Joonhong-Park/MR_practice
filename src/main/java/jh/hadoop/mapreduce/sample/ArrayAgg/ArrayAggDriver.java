@@ -28,7 +28,7 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.IOException;
 
 /**
- * Wordcount 예제.
+ * Array_agg in reducer - 예제
  *
  * @author Data Dynamics
  * @version 0.1

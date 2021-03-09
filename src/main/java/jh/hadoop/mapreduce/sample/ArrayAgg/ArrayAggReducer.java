@@ -26,7 +26,7 @@ import java.util.Iterator;
 
 
 /**
- * Wordcount Reducer
+ * Array_agg in reducer - Reducer
  *
  * @author Data Dynamics
  * @version 0.1

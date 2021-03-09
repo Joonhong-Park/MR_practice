@@ -17,13 +17,16 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  */
 package jh.hadoop.mapreduce.sample.Join;
 
-import jh.hadoop.mapreduce.deduptitle.DedupTitlePartitioner;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -65,6 +68,9 @@ public class JoinByKeyDriver extends org.apache.hadoop.conf.Configured implement
 
         // Partitioner
         job.setPartitionerClass(JoinByKeyPartitioner.class);
+
+        MultipleOutputs.addNamedOutput(job, "userId", TextOutputFormat.class, Text.class, Text.class);
+        LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;

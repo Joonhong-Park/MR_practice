@@ -25,7 +25,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 
 /**
- * Wordcount Mapper
+ * Array_agg in reducer - Mapper
  *
  * @author Data Dynamics
  * @version 0.1
@@ -47,15 +47,13 @@ public class ArrayAggMapper extends Mapper<LongWritable, Text, Text, Text> {
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         String row = value.toString();
         String[] columns = row.split(delimiter);
-        if (btime.isEmpty()){
+        if (btime.isEmpty()) {
             context.write(new Text(columns[3]), new Text((columns[2])));
-        }else{
-            if(columns[3].equals(btime)){
+        } else {
+            if (columns[3].equals(btime)) {
                 context.write(new Text(columns[3]), new Text((columns[2])));
             }
         }
-
-
     }
 
     @Override
