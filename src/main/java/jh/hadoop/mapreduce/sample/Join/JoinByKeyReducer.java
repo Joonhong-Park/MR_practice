@@ -69,6 +69,7 @@ public class JoinByKeyReducer extends Reducer<Text, Text, Text, Text> {
                     for (Text value : values) {
                         String chat_data = value.toString();
                         chat_all.append(chat_data).append("|");
+                        context.getCounter("CUSTOM", "total chat").increment(1);
                     }
                     Text userId = new Text(id);
                     String chats = chat_all.substring(0, chat_all.length() - 1);

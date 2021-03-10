@@ -17,18 +17,22 @@ s * Licensed to the Apache Software Foundation (ASF) under one
  */
 package jh.hadoop.mapreduce.sample.Join;
 
+import jh.hadoop.mapreduce.sample.input.ChatLogInputFormat;
+import jh.hadoop.mapreduce.sample.input.ZipCodec;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.ToolRunner;
+
 
 import java.io.IOException;
 
@@ -68,9 +72,26 @@ public class JoinByKeyDriver extends org.apache.hadoop.conf.Configured implement
 
         // Partitioner
         job.setPartitionerClass(JoinByKeyPartitioner.class);
-
+        
+        // MultipleOutput
         MultipleOutputs.addNamedOutput(job, "userId", TextOutputFormat.class, Text.class, Text.class);
         LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
+        
+        // Output Sperator
+        job.getConfiguration().set(TextOutputFormat.SEPARATOR, "=");
+        
+        // Map Output -> gzip
+//        job.getConfiguration().set(MRJobConfig.MAP_OUTPUT_COMPRESS, "true");
+        job.getConfiguration().setBoolean(MRJobConfig.MAP_OUTPUT_COMPRESS, true);
+        job.getConfiguration().set(MRJobConfig.MAP_OUTPUT_COMPRESS_CODEC, GzipCodec.class.getName());
+        
+        // Reducer output -> gzip
+        job.getConfiguration().set(TextOutputFormat.COMPRESS, "true");
+        job.getConfiguration().set(TextOutputFormat.COMPRESS_CODEC, GzipCodec.class.getName());
+        
+        // map input시 zip파일도 읽을 수 있도록 zip codec 추가
+        job.getConfiguration().set("io.compression.codecs",
+                job.getConfiguration().get("io.compression.codecs") + "," + ZipCodec.class.getName());
 
         // Run a Hadoop Job
         return job.waitForCompletion(true) ? 0 : 1;
@@ -81,7 +102,8 @@ public class JoinByKeyDriver extends org.apache.hadoop.conf.Configured implement
             if ("-inputone".equals(args[i])) {
                 MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinByKeyMapper1.class);
             } else if ("-inputtwo".equals(args[i])) {
-                MultipleInputs.addInputPath(job, new Path(args[++i]), TextInputFormat.class, JoinByKeyMapper2.class);
+                // Chatting 파일은 직접만든 ChatLogInputFormat을 이용하여 read
+                MultipleInputs.addInputPath(job, new Path(args[++i]), ChatLogInputFormat.class, JoinByKeyMapper2.class);
             } else if ("-output".equals(args[i])) {
                 FileOutputFormat.setOutputPath(job, new Path(args[++i]));
             } else if ("-delimiter".equals(args[i])) {
