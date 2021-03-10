@@ -18,6 +18,8 @@
 package jh.hadoop.mapreduce.sample.Join;
 
 import jh.hadoop.mapreduce.ChatLog;
+import jh.hadoop.mapreduce.sample.input.ChatLogInputFormat;
+import jh.hadoop.mapreduce.sample.input.ChatLogWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -33,23 +35,20 @@ import java.util.Map;
  * @author Data Dynamics
  * @version 0.1
  */
-public class JoinByKeyMapper2 extends Mapper<LongWritable, Text, Text, Text> {
+public class JoinByKeyMapper2 extends Mapper<LongWritable, ChatLogWritable, Text, Text> {
 
     private String delimiter;
     HashMap<String, String> chat_data = new HashMap<>();
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        Configuration configuration = context.getConfiguration();
-        delimiter = configuration.get("delimiter", "\t");
-    }
+            }
 
     @Override
-    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String row = value.toString();
-        String[] columns = row.split(delimiter);
-        String chat_id = columns[ChatLog.user_id.ordinal()];
-        String chat = columns[ChatLog.chat_text.ordinal()];
+    protected void map(LongWritable key, ChatLogWritable value, Context context) throws IOException, InterruptedException {
+
+        String chat_id = value.getUserId();
+        String chat = value.getChatText();
 
         context.write(new Text(chat_id + "^B"), new Text(chat));
     }
